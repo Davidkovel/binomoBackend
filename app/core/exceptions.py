@@ -52,11 +52,17 @@ class InsufficientFundsError(Exception):
         super().__init__(self.detail)
 
 
-async def validation_exception_handler(_: Request, __: ValidationError):
-    print(__)
+async def validation_exception_handler(request: Request, exc: ValidationError):
+    for err in exc.errors():
+        if "password" in err.get("loc", []):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"message": "Ненадёжный пароль. Пример безопасного пароля: HardPa$$w0rd!iamthewinner"}
+            )
+    # Для остальных ошибок
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content=ErrorResponse(message="Ошибка в данных запроса.").dict(),
+        content={"message": "Ошибка в данных запроса."}
     )
 
 
