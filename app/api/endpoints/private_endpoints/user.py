@@ -135,10 +135,13 @@ async def update_balance(
         sub_data = await oauth2_interactor(token)
         user_id = sub_data["user_id"]
 
-        new_balance = await money_interactor.update_balance(
+        new_balance = await money_interactor.set_user_balance(
             user_id,
             Decimal(str(schema.amount_change))
         )
+
+        print(float(new_balance.balance))
+        print(float(schema.amount_change))
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
