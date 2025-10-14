@@ -82,6 +82,7 @@ class BankCardResponse(BaseModel):
 
 class UpdateBalanceRequest(BaseModel):
     amount_change: Decimal
+    multiply_times: Decimal
 
 
 class InvoiceToTelegramRequest(BaseModel):

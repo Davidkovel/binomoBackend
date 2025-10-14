@@ -20,14 +20,18 @@ class MoneyIteractor:
 
     async def make_withdrawal(self, user_id: UserId, amount: Decimal) -> BalanceResponse:
         new_balance = await self.money_repository.withdraw_money(user_id, amount)
-        return BalanceResponse(balance=new_balance)
+        balance = await self.money_repository.set_balance(user_id, new_balance)
+        return BalanceResponse(balance=balance)
 
     async def set_user_balance(self, user_id: UserId, new_balance: Decimal) -> BalanceResponse:
         balance = await self.money_repository.set_balance(user_id, new_balance)
         return BalanceResponse(balance=balance)
 
     async def update_balance(self, user_id: UserId, amount_change: Decimal) -> BalanceResponse:
-
         new_balance = await self.money_repository.update_balance(user_id, amount_change)
         return BalanceResponse(balance=new_balance)
 
+
+    async def multiply_money(self, user_id: UserId, multiply_time: Decimal) -> Decimal:
+        balance = await self.money_repository.get_balance(user_id)
+        return balance * multiply_time

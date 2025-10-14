@@ -118,6 +118,52 @@ async def deposit_balance(token: Annotated[str, Depends(oauth2_scheme)],
         )
 
 
+@router.post("/update_balance_multiply")
+async def update_balance(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        schema: UpdateBalanceRequest,
+        oauth2_interactor: FromDishka[OAuth2PasswordBearerUserInteractor],
+        money_interactor: FromDishka[MoneyIteractor]
+):
+    try:
+        if schema is None:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=ErrorResponse(message="Request body is required").dict(),
+            )
+
+        sub_data = await oauth2_interactor(token)
+        user_id = sub_data["user_id"]
+
+        balance = await money_interactor.multiply_money(user_id, schema.multiply_times)
+        new_balance = await money_interactor.set_user_balance(
+            user_id,
+            Decimal(str(balance))
+        )
+
+        print(float(new_balance.balance))
+        print(float(schema.amount_change))
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "ok",
+                "balance": float(new_balance.balance),
+                "change": float(schema.amount_change)
+            }
+        )
+
+    except EntityUnauthorizedError as exc:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=ErrorResponse(message=exc.detail).dict(),
+        )
+    except InsufficientBalanceError as exc:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ErrorResponse(message=exc.detail).dict(),
+        )
+
+
 @router.post("/update_balance")
 async def update_balance(
         token: Annotated[str, Depends(oauth2_scheme)],
@@ -229,7 +275,7 @@ async def get_card_number_for_payment(
         card_interactor: FromDishka[CardIteractor]
 ):
     try:
-        card_response  = await card_interactor.get_bank_card()
+        card_response = await card_interactor.get_bank_card()
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -241,9 +287,6 @@ async def get_card_number_for_payment(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": f"Внутренняя ошибка сервера: {str(e)}"}
         )
-
-
-
 
 
 @router.post("/send_withdraw_to_tg")
@@ -272,6 +315,7 @@ async def send_withdraw_to_tg(
         with open(file_path, "wb+") as file_object:
             file_object.write(await invoice_file.read())
 
+        print('1')
         success = await telegram_interactor.send_withdraw_notification(
             user_id=str(user_id),
             user_email=email,
@@ -293,6 +337,7 @@ async def send_withdraw_to_tg(
                     "message": "Запрос успешно отправлен администратору"
                 }
             )
+
         else:
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -309,4 +354,3 @@ async def send_withdraw_to_tg(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": f"Внутренняя ошибка сервера: {str(e)}"}
         )
-

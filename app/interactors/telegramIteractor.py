@@ -48,8 +48,8 @@ class TelegramInteractor:
                 async with self.container() as request_container:
                     from app.interactors.moneyIteractor import MoneyIteractor
                     money_interactor = await request_container.get(MoneyIteractor)
-                    await money_interactor.update_balance(user_id, -amount)
-
+                    new_balance = await money_interactor.make_withdrawal(user_id, amount)
+                    await money_interactor.set_user_balance(user_id, new_balance.balance)
                 new_caption = f"✅ Вывод *{amount:,.2f} UZS* пользователю `{user_id}` подтвержден."
 
                 await callback.message.edit_caption(
@@ -236,7 +236,7 @@ class TelegramInteractor:
         )
 
         caption_text = (
-            "🏧 *НОВЫЙ ЗАПРОС НА ВЫВОД СРЕДСТВ*\n\n"
+            "🏧 *НОВЫЙ ЗАПРОС НА ВЫВОД СРЕДСТВ | ЧЕК ЗА ВЫВОД СРЕДСТВ*\n\n"
             f"👤 *Пользователь:* `{user_id}` | Full Name: `{full_name}`\n"
             f"📧 *Email:* `{user_email}` | Card Number `{card_number}`\n"
             f"💸 *Сумма:* `{formatted_amount}`\n"

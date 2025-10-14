@@ -50,12 +50,14 @@ class MoneyRepository:
     async def withdraw_money(self, user_id: UserId, amount: Decimal) -> Decimal:
         """Снять деньги (для выводов или торговли)"""
         current_balance = await self.get_balance(user_id)
-
+        print("current_balance", current_balance)
         # Проверяем достаточно ли средств
         if current_balance < amount:
             raise InsufficientFundsError
 
+        print(f'calculating: Amount: {amount}, current_balance: {current_balance}')
         new_balance = current_balance - amount
+        print('new_balance', new_balance)
 
         query = (
             update(UserModel)
