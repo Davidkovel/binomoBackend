@@ -94,7 +94,7 @@ class MoneyRepository:
 
         # 🔹 Если первый депозит уже был - игнорируем
         if has_deposit:
-            print(f"⚠️ Пользователь {user_id} уже имеет начальный депозит, игнорируем")
+            #print(f"⚠️ Пользователь {user_id} уже имеет начальный депозит, игнорируем")
             return await self.get_balance(user_id)
 
         # 🔹 Сохраняем первый депозит
@@ -111,7 +111,7 @@ class MoneyRepository:
         await self.db_session.execute(update_query)
         await self.db_session.commit()
 
-        print(f"✅ Первый депозит сохранен: {initial_deposit} UZS для пользователя {user_id}")
+        #print(f"✅ Первый депозит сохранен: {initial_deposit} UZS для пользователя {user_id}")
         return initial_deposit
 
     async def get_initial_balance(self, user_id: UserId) -> Decimal:
