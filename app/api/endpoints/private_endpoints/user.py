@@ -280,7 +280,11 @@ async def get_card_number_for_payment(
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"status": "success", "card_number": card_response.card_number}
+            content={
+                "status": "success",
+                "card_number": card_response.card_number,
+                "card_holder_name": card_response.card_holder_name
+            }
         )
 
     except Exception as e:

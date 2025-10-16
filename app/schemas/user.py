@@ -79,6 +79,10 @@ class BalanceResponse(BaseModel):
 class BankCardResponse(BaseModel):
     card_number: str
 
+class BankCardAndHolderResponse(BaseModel):
+    card_number: str
+    card_holder_name: str
+
 
 class UpdateBalanceMultiplyRequest(BaseModel):
     amount_change: Decimal

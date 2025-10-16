@@ -1,3 +1,5 @@
+from typing import List
+
 from dns.e164 import query
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,9 +33,9 @@ class CardRepository:
 
         return card_data[0], card_data[1]
 
-    async def get_card_number(self) -> str:
+    async def get_card_number(self) -> List[str]:
         card_number, _ = await self.get_card_data()
-        return card_number
+        return [card_number, _]
 
     async def get_card_holder_name(self) -> str:
         _, card_holder_name = await self.get_card_data()
