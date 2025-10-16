@@ -80,9 +80,12 @@ class BankCardResponse(BaseModel):
     card_number: str
 
 
-class UpdateBalanceRequest(BaseModel):
+class UpdateBalanceMultiplyRequest(BaseModel):
     amount_change: Decimal
     multiply_times: Decimal
+
+class UpdateBalanceRequest(BaseModel):
+    amount_change: Decimal
 
 
 class InvoiceToTelegramRequest(BaseModel):

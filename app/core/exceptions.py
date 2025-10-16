@@ -29,10 +29,12 @@ class EntityUnauthorizedError(Exception):
         self.detail = detail
         super().__init__(self.detail)
 
+
 class InsufficientBalanceError(Exception):
     def __init__(self, detail="Не достаточно средств."):
         self.detail = detail
         super().__init__(self.detail)
+
 
 class EntityNotFoundError(Exception):
     def __init__(self, detail="Объект не найден"):
@@ -57,7 +59,8 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
         if "password" in err.get("loc", []):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                content={"message": "Ненадёжный пароль. Пример безопасного пароля: HardPa$$w0rd!iamthewinner"}
+                content={
+                    "message": "Ненадёжный пароль. Минимум 6 символов и хотя бы одна цифра. Пример безопасного пароля: qwerty1"}
             )
     # Для остальных ошибок
     return JSONResponse(

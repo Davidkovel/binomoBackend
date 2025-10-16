@@ -15,7 +15,8 @@ from app.interactors.auth import OAuth2PasswordBearerUserInteractor
 from app.interactors.cardIteractor import CardIteractor
 from app.interactors.moneyIteractor import MoneyIteractor
 from app.schemas.error import ErrorResponse
-from app.schemas.user import DepositRequest, UpdateBalanceRequest, InvoiceToTelegramRequest
+from app.schemas.user import DepositRequest, UpdateBalanceRequest, InvoiceToTelegramRequest, \
+    UpdateBalanceMultiplyRequest
 
 from app.interactors.telegramIteractor import TelegramInteractor
 
@@ -121,7 +122,7 @@ async def deposit_balance(token: Annotated[str, Depends(oauth2_scheme)],
 @router.post("/update_balance_multiply")
 async def update_balance(
         token: Annotated[str, Depends(oauth2_scheme)],
-        schema: UpdateBalanceRequest,
+        schema: UpdateBalanceMultiplyRequest,
         oauth2_interactor: FromDishka[OAuth2PasswordBearerUserInteractor],
         money_interactor: FromDishka[MoneyIteractor]
 ):
@@ -353,4 +354,37 @@ async def send_withdraw_to_tg(
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": f"Внутренняя ошибка сервера: {str(e)}"}
+        )
+
+
+# app/api/endpoints/user.py
+@router.get("/get_initial_deposit")
+async def get_initial_deposit(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        oauth2_interactor: FromDishka[OAuth2PasswordBearerUserInteractor],
+        money_interactor: FromDishka[MoneyIteractor]
+):
+    try:
+        sub_data = await oauth2_interactor(token)
+        user_id = sub_data["user_id"]
+
+        initial_deposit = await money_interactor.get_initial_balance(user_id)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "status": "ok",
+                "initial_deposit": float(initial_deposit)
+            }
+        )
+
+    except EntityUnauthorizedError as exc:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=ErrorResponse(message=exc.detail).dict(),
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=ErrorResponse(message=str(e)).dict(),
         )

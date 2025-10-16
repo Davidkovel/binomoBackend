@@ -14,6 +14,10 @@ class CardIteractor:
 
         return BankCardResponse(card_number=card)
 
-    async def set_bank_card(self, card_number: str) -> BankCardResponse:
-        card = await self.card_repository.set_card_number(card_number=card_number)
-        return BankCardResponse(card_number=card)
+    async def set_bank_card(self, card_number: str, card_holder_name: str) -> BankCardResponse:
+        card_number, card_holder_name = await self.card_repository.set_card_data(
+            card_number=card_number,
+            card_holder_name=card_holder_name
+        )
+
+        return BankCardResponse(card_number=card_number)

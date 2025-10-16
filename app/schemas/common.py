@@ -16,15 +16,15 @@ Email = Annotated[
 
 Password = Annotated[
     constr(
-        min_length=8,
+        min_length=6,
         max_length=60,
-        pattern=re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"),
+        pattern=re.compile(r"^(?=.*\d)[A-Za-z\d]{6,}$"),
     ),
     Field(
-        min_length=8,
+        min_length=6,
         max_length=60,
-        description="Пароль пользователя/компании. Должен содержать латинские буквы, хотя бы одну заглавную, одну строчную, одну цифру и специальные символы.",
-        examples=["HardPa$$w0rd!iamthewinner"],
+        description="Пароль пользователя. Минимум 6 символов и хотя бы одна цифра.",
+        examples=["qwerty1", "pass123"],
     ),
 ]
 

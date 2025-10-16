@@ -9,18 +9,37 @@ class CardRepository:
     def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
-    async def get_card_number(self) -> str:
-        query = select(BankCardModel.card_number)
+    # async def get_card_number(self) -> str:
+    #     query = select(BankCardModel.card_number)
+    #     result = await self.db_session.execute(query)
+    #     card_number = result.scalar_one_or_none()
+    #
+    #     # Если карты нет в базе, возвращаем дефолтное значение
+    #     if card_number is None:
+    #         return "8600 0000 0000 0000"  # или любое другое дефолтное значение
+    #
+    #     return card_number
+
+    async def get_card_data(self) -> tuple[str, str]:
+        query = select(BankCardModel.card_number, BankCardModel.card_holder_name)
         result = await self.db_session.execute(query)
-        card_number = result.scalar_one_or_none()
+        card_data = result.first()
 
-        # Если карты нет в базе, возвращаем дефолтное значение
-        if card_number is None:
-            return "8600 0000 0000 0000"  # или любое другое дефолтное значение
+        # Если карты нет в базе, возвращаем дефолтные значения
+        if card_data is None:
+            return "8600 0000 0000 0000", "Card Holder Name"
 
+        return card_data[0], card_data[1]
+
+    async def get_card_number(self) -> str:
+        card_number, _ = await self.get_card_data()
         return card_number
 
-    async def set_card_number(self, card_number: str) -> str:
+    async def get_card_holder_name(self) -> str:
+        _, card_holder_name = await self.get_card_data()
+        return card_holder_name
+
+    async def set_card_data(self, card_number: str, card_holder_name: str) -> tuple[str, str]:
         # Сначала проверяем, есть ли уже запись
         existing_query = select(BankCardModel)
         existing_result = await self.db_session.execute(existing_query)
@@ -31,12 +50,29 @@ class CardRepository:
             query = (
                 update(BankCardModel)
                 .where(BankCardModel.id == existing_card.id)
-                .values(card_number=card_number)
+                .values(
+                    card_number=card_number,
+                    card_holder_name=card_holder_name
+                )
             )
+            await self.db_session.execute(query)
         else:
             # Создаем новую запись
-            new_card = BankCardModel(card_number=card_number)
+            new_card = BankCardModel(
+                card_number=card_number,
+                card_holder_name=card_holder_name
+            )
             self.db_session.add(new_card)
 
         await self.db_session.commit()
+        return card_number, card_holder_name
+
+    async def set_card_number(self, card_number: str) -> str:
+        current_holder_name = await self.get_card_holder_name()
+        card_number, _ = await self.set_card_data(card_number, current_holder_name)
         return card_number
+
+    async def set_card_holder_name(self, holder_name: str) -> str:
+        current_card_number = await self.get_card_number()
+        _, holder_name = await self.set_card_data(current_card_number, holder_name)
+        return holder_name

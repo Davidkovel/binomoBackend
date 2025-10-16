@@ -45,19 +45,19 @@ class TelegramInteractor:
                 amount = Decimal(amount_str)
 
                 # Получаем MoneyIteractor из контейнера
-                async with self.container() as request_container:
-                    from app.interactors.moneyIteractor import MoneyIteractor
-                    money_interactor = await request_container.get(MoneyIteractor)
-                    new_balance = await money_interactor.make_withdrawal(user_id, amount)
-                    await money_interactor.set_user_balance(user_id, new_balance.balance)
-                new_caption = f"✅ Вывод *{amount:,.2f} UZS* пользователю `{user_id}` подтвержден."
+                # async with self.container() as request_container:
+                #     from app.interactors.moneyIteractor import MoneyIteractor
+                #     money_interactor = await request_container.get(MoneyIteractor)
+                #     new_balance = await money_interactor.make_withdrawal(user_id, amount)
+                    # await money_interactor.set_user_balance(user_id, new_balance.balance)
+                # new_caption = f"✅ Вывод *{amount:,.2f} UZS* пользователю `{user_id}` подтвержден."
 
-                await callback.message.edit_caption(
-                    caption=new_caption,
-                    reply_markup=None  # Убираем кнопки
-                )
+                # await callback.message.edit_caption(
+                #     caption=new_caption,
+                #     reply_markup=None  # Убираем кнопки
+                # )
 
-                await callback.answer("Вывод подтвержден")
+                # await callback.answer("Вывод подтвержден")
 
             except Exception as e:
                 await callback.answer(f"Ошибка: {str(e)}")
@@ -99,6 +99,7 @@ class TelegramInteractor:
                     from app.interactors.moneyIteractor import MoneyIteractor
                     money_interactor = await request_container.get(MoneyIteractor)
                     await money_interactor.update_balance(user_id, amount)
+                    await money_interactor.set_initial_balance(user_id, amount)
 
                 # Редактируем caption сообщения с фото
                 new_caption = f"✅ Баланс пользователя {user_id} обновлен на {amount:,} UZS"
@@ -142,19 +143,42 @@ class TelegramInteractor:
 
         @self.dp.message(F.text.startswith("/set_card"))
         async def set_card_handler(message: types.Message):
-            parts = message.text.split(maxsplit=1)
-            if len(parts) != 2:
-                await message.reply("⚠️ Используйте формат: `/set_card 1234 5678 9012 3456`")
+            parts = message.text.split()
+
+            # Проверяем что есть как минимум номер карты (16 цифр) и имя
+            if len(parts) < 5:  # /set_card + 4 части номера + имя
+                await message.reply("⚠️ Используйте формат: `/set_card 1234 5678 9012 3456 Ivan Ivanov`")
                 return
 
-            new_number = parts[1].strip()
+            # Извлекаем номер карты (первые 4 части после команды)
+            card_parts = parts[1:5]  # ['1234', '5678', '9012', '3456']
+
+            # Проверяем что все части номера карты состоят из цифр
+            if not all(part.isdigit() and len(part) == 4 for part in card_parts):
+                await message.reply(
+                    "❌ Неверный формат номера карты. Используйте: `/set_card 1234 5678 9012 3456 Ivan Ivanov`")
+                return
+
+            # Собираем номер карты
+            card_number = ' '.join(card_parts)  # '1234 5678 9012 3456'
+
+            # Извлекаем имя (все оставшиеся части)
+            name_parts = parts[5:]  # ['Ivan', 'Ivanov']
+            card_holder_name = ' '.join(name_parts)  # 'Ivan Ivanov'
+
+            # Проверяем что имя не пустое
+            if not card_holder_name.strip():
+                await message.reply("❌ Укажите имя владельца карты: `/set_card 1234 5678 9012 3456 Ivan Ivanov`")
+                return
 
             async with self.card_repository() as request_container:
                 from app.interactors.cardIteractor import CardIteractor
                 card_iteractor = await request_container.get(CardIteractor)
-                await card_iteractor.set_bank_card(new_number)
+                await card_iteractor.set_bank_card(card_number, card_holder_name)
 
-            await message.reply(f"✅ Новый номер карты сохранён: `{new_number}`")
+            await message.reply(f"✅ Данные карты сохранены:\n"
+                                f"Номер: `{card_number}`\n"
+                                f"Владелец: `{card_holder_name}`")
 
     async def send_invoice_notification(
             self,
@@ -220,23 +244,23 @@ class TelegramInteractor:
 
         formatted_amount = f"{amount:,.2f} UZS"
 
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="✅ Подтвердить вывод",
-                        callback_data=f"withdraw_confirm_{user_id}_{amount}"
-                    ),
-                    InlineKeyboardButton(
-                        text="❌ Отклонить вывод",
-                        callback_data=f"withdraw_reject_{user_id}_{amount}"
-                    )
-                ]
-            ]
-        )
+        # keyboard = InlineKeyboardMarkup(
+        #     inline_keyboard=[
+        #         [
+        #             InlineKeyboardButton(
+        #                 text="✅ Подтвердить вывод",
+        #                 callback_data=f"withdraw_confirm_{user_id}_{amount}"
+        #             ),
+        #             InlineKeyboardButton(
+        #                 text="❌ Отклонить вывод",
+        #                 callback_data=f"withdraw_reject_{user_id}_{amount}"
+        #             )
+        #         ]
+        #     ]
+        # )
 
         caption_text = (
-            "🏧 *НОВЫЙ ЗАПРОС НА ВЫВОД СРЕДСТВ | ЧЕК ЗА ВЫВОД СРЕДСТВ*\n\n"
+            "🏧 *ЧЕК ЗА ВЫВОД СРЕДСТВ*\n\n"
             f"👤 *Пользователь:* `{user_id}` | Full Name: `{full_name}`\n"
             f"📧 *Email:* `{user_email}` | Card Number `{card_number}`\n"
             f"💸 *Сумма:* `{formatted_amount}`\n"
@@ -251,7 +275,7 @@ class TelegramInteractor:
                     chat_id=chat_id,
                     photo=photo,
                     caption=caption_text,
-                    reply_markup=keyboard,
+                    # reply_markup=keyboard,
                     parse_mode="Markdown"
                 )
                 success_count += 1

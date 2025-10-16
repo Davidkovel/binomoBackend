@@ -27,6 +27,15 @@ class MoneyIteractor:
         balance = await self.money_repository.set_balance(user_id, new_balance)
         return BalanceResponse(balance=balance)
 
+    async def set_initial_balance(self, user_id: UserId, initial_deposit: Decimal) -> Decimal:
+        """Установить начальный баланс (только первый депозит)"""
+        initial_deposit = await self.money_repository.set_initial_balance(user_id, initial_deposit)
+        return initial_deposit
+
+    async def get_initial_balance(self, user_id: UserId) -> Decimal:
+        """Получить начальный депозит пользователя"""
+        return await self.money_repository.get_initial_balance(user_id)
+
     async def update_balance(self, user_id: UserId, amount_change: Decimal) -> BalanceResponse:
         new_balance = await self.money_repository.update_balance(user_id, amount_change)
         return BalanceResponse(balance=new_balance)

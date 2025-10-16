@@ -34,6 +34,8 @@ class UserModel(Base):
     email = Column(String(120), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     balance = Column(Numeric(15, 2), default=0.00, nullable=False)
+    initial_balance = Column(Numeric(15, 2), default=0.00, nullable=False)  # 🔹 Добавляем
+    has_initial_deposit = Column(Boolean, default=False, nullable=False)  # 🔹 Флаг первого депозита
 
 
 class BankCardModel(Base):
@@ -47,3 +49,4 @@ class BankCardModel(Base):
         default=uuid.uuid4,
     )
     card_number = Column(String(100), default="1111 2222 3333 4444", nullable=False)
+    card_holder_name = Column(String(100), )
