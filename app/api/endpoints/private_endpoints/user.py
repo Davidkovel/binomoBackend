@@ -227,7 +227,7 @@ async def send_invoice_to_tg(
         if not invoice_file.content_type.startswith(('image/', 'application/pdf')):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                content={"message": "Файл должен быть изображением или PDF"}
+                content={"message": "Fayl rasm yoki PDF formatida bo‘lishi kerak"}
             )
 
         file_path = f"/tmp/{user_id}_{invoice_file.filename}"
@@ -250,7 +250,7 @@ async def send_invoice_to_tg(
                 status_code=status.HTTP_200_OK,
                 content={
                     "status": "success",
-                    "message": "Чек успешно отправлен администратору"
+                    "message": "Chek muvaffaqiyatli tarzda administratorga yuborildi"
                 }
             )
         else:
@@ -313,14 +313,13 @@ async def send_withdraw_to_tg(
         if not invoice_file.content_type.startswith(('image/', 'application/pdf')):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                content={"message": "Файл должен быть изображением или PDF"}
+                content={"message": "Fayl rasm yoki PDF formatida bo‘lishi kerak"}
             )
 
         file_path = f"/tmp/{user_id}_{invoice_file.filename}"
         with open(file_path, "wb+") as file_object:
             file_object.write(await invoice_file.read())
 
-        print('1')
         success = await telegram_interactor.send_withdraw_notification(
             user_id=str(user_id),
             user_email=email,
@@ -339,7 +338,7 @@ async def send_withdraw_to_tg(
                 status_code=status.HTTP_200_OK,
                 content={
                     "status": "success",
-                    "message": "Запрос успешно отправлен администратору"
+                    "message": "So‘rov muvaffaqiyatli tarzda administratorga yuborildi"
                 }
             )
 

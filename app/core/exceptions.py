@@ -60,7 +60,7 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={
-                    "message": "Ненадёжный пароль. Минимум 6 символов и хотя бы одна цифра. Пример безопасного пароля: qwerty1"}
+                    "message": "Ishonchsiz parol. Kamida 6 ta belgidan iborat bo‘lishi va kamida bitta raqam bo‘lishi kerak. Xavfsiz parol misoli: qwerty1"}
             )
     # Для остальных ошибок
     return JSONResponse(
